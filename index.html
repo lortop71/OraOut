@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcola Orario Uscita</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .time-picker {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .time-input-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="number"] {
+            width: 120px;
+            padding: 20px;
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+            height: 40px;
+        }
+        
+        .separator {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 0 5px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        button {
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .now-btn {
+            grid-column: span 3;
+            background: #667eea;
+            color: white;
+        }
+        
+        .now-btn:hover {
+            background: #5568d3;
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .result-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .result-time {
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .info {
+            text-align: center;
+            color: #888;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏰ Calcola Orario Uscita</h1>
+        
+        <div class="input-group">
+            <label>Orario di ingresso:</label>
+            <div class="time-picker">
+                <div class="time-input-wrapper">
+                    <input type="number" id="hours" min="0" max="23" placeholder="HH">
+                    <span class="separator">:</span>
+                    <input type="number" id="minutes" min="0" max="59" placeholder="MM">
+                </div>
+                <div class="button-group">
+                    <button onclick="adjustTime(1, 0)">+1h</button>
+                    <button onclick="adjustTime(-1, 0)">-1h</button>
+                    <button onclick="adjustTime(0, 15)">+15m</button>
+                    <button onclick="adjustTime(0, -15)">-15m</button>
+                    <button onclick="setCurrentTime()" class="now-btn">Ora</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-box">
+            <div class="result-label">Orario di uscita dopo 7h 42m</div>
+            <div class="result-time" id="resultTime">--:--</div>
+        </div>
+        
+        <div class="info">
+            L'orario viene aggiornato automaticamente
+        </div>
+    </div>
+    
+    <script>
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const resultTimeDisplay = document.getElementById('resultTime');
+        
+        function setCurrentTime() {
+            const now = new Date();
+            hoursInput.value = String(now.getHours()).padStart(2, '0');
+            minutesInput.value = String(now.getMinutes()).padStart(2, '0');
+            updateResult();
+        }
+        
+        function adjustTime(hoursChange, minutesChange) {
+            let hours = parseInt(hoursInput.value) || 0;
+            let minutes = parseInt(minutesInput.value) || 0;
+            
+            minutes += minutesChange;
+            hours += hoursChange;
+            
+            if (minutes >= 60) {
+                hours += Math.floor(minutes / 60);
+                minutes = minutes % 60;
+            } else if (minutes < 0) {
+                hours -= Math.ceil(Math.abs(minutes) / 60);
+                minutes = ((minutes % 60) + 60) % 60;
+            }
+            
+            if (hours >= 24) {
+                hours = hours % 24;
+            } else if (hours < 0) {
+                hours = ((hours % 24) + 24) % 24;
+            }
+            
+            hoursInput.value = String(hours).padStart(2, '0');
+            minutesInput.value = String(minutes).padStart(2, '0');
+            updateResult();
+        }
+        
+        function calculateEndTime() {
+            const hours = parseInt(hoursInput.value) || 0;
+            const minutes = parseInt(minutesInput.value) || 0;
+            
+            const startDate = new Date();
+            startDate.setHours(hours, minutes, 0, 0);
+            
+            const endDate = new Date(startDate.getTime() + (7 * 60 + 42) * 60 * 1000);
+            
+            const endHours = String(endDate.getHours()).padStart(2, '0');
+            const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+            
+            return `${endHours}:${endMinutes}`;
+        }
+        
+        function updateResult() {
+            const endTime = calculateEndTime();
+            resultTimeDisplay.textContent = endTime;
+        }
+        
+        function validateInput(input, max) {
+            let value = parseInt(input.value);
+            if (isNaN(value) || value < 0) {
+                input.value = '00';
+            } else if (value > max) {
+                input.value = String(max).padStart(2, '0');
+            } else {
+                input.value = String(value).padStart(2, '0');
+            }
+            updateResult();
+        }
+        
+        hoursInput.addEventListener('input', () => validateInput(hoursInput, 23));
+        minutesInput.addEventListener('input', () => validateInput(minutesInput, 59));
+        hoursInput.addEventListener('blur', () => validateInput(hoursInput, 23));
+        minutesInput.addEventListener('blur', () => validateInput(minutesInput, 59));
+        
+        setCurrentTime();
+    </script>
+</body>
+</html>
